@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import postgres from "postgres";
 import z from "zod";
 
+import { signIn } from '@/auth';
+import { AuthError } from 'next-auth';
+
 const FormSchema = z.object({
   id: z.string(),
   customerId: z.string({
@@ -108,4 +111,23 @@ export async function updateInvoice(
 export async function deleteInvoice(id: string) {
   await sql`DELETE FROM invoices WHERE id = ${id}`;
   revalidatePath('/dashboard/invoices');
+}
+
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    await signIn('credentials', formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return 'Invalid credentials.';
+        default:
+          return 'Something went wrong.';
+      }
+    }
+    throw error;
+  }
 }
