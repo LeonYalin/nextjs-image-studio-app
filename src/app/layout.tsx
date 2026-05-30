@@ -3,6 +3,9 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
+import { Toaster } from "@/components/ui/sonner";
 
 const geist = Geist({ subsets: [ 'latin' ], variable: '--font-sans' });
 
@@ -11,20 +14,24 @@ export const metadata: Metadata = {
   description: "The Image Gallery app similar to Google Photos",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
   return (
     <html
       lang="en"
       className={cn("h-full", "antialiased", "font-sans", geist.variable)}
     >
       <body className="min-h-full">
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
+        <SessionProvider session={session}>
+          <TooltipProvider>
+            {children}
+            <Toaster richColors closeButton position="top-right" />
+          </TooltipProvider>
+        </SessionProvider>
       </body>
     </html>
   );
