@@ -1,10 +1,13 @@
 "use server";
 
 import { signIn, signOut } from "@/auth";
-import { User } from "@/types/user";
-import { randomUUID } from "crypto";
+import { db } from "@/db";
 import { AuthError } from "next-auth";
+import * as schema from "../db/schema";
 import * as z from "zod";
+import { eq } from "drizzle-orm";
+import { randomUUID } from "crypto";
+import bcrypt from 'bcrypt';
 
 export async function loginAction(prevState: any, formData: FormData) {
   const email = formData.get("email") as string;
@@ -38,42 +41,45 @@ export async function logoutAction() {
 
 export async function registerAction(prevState: any, formData: FormData) {
   const registerFieldsSchema = z.object({
-    name: z.string().min(2),
-    email: z.string().email(),
-    password: z.string().min(4),
+    name: z.string().min(2, "Name must be at least 2 characters long"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(4, "Password must be minimun 4 characters long"),
   });
 
   const rawData = Object.fromEntries(formData);
   const validatedFields = registerFieldsSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
-    return { success: false, error: "Invalid form data" };
+    return {
+      success: false,
+      error: validatedFields.error.flatten().fieldErrors.email?.[ 0 ] || "Invalid form data"
+    };
   }
 
-  const { name, email, password } = validatedFields.data;
-
   try {
-    // 1. MOCK DATABASE CHECK (Replace this with: await db.select().from(users)...)
-    if (email === "test@test.com") {
+    // check if user exists. If yes, return error
+    const existingUser = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.email, validatedFields.data.email.toLowerCase()))
+      .get();
+
+    if (existingUser) {
       return { success: false, error: "User already exists" };
     }
 
-    // 2. PASSWORD HASHING (In production, use a library like bcryptjs)
-    // const hashedPassword = await bcrypt.hash(password, 10);
-
-    const now = Date.now().toString();
-    const newUser: User = {
+    const hashedPassword = await bcrypt.hash(validatedFields.data.password, 10);
+    const now = new Date();
+    await db.insert(schema.users).values({
       id: randomUUID(),
-      email,
-      name,
+      email: validatedFields.data.email,
+      name: validatedFields.data.name,
+      passwordHash: hashedPassword,
       role: "admin",
       avatarUrl: "",
       createdAt: now,
       updatedAt: now,
-    };
-
-    console.log("saving nwe account to the database");
-    // await db.insert(users).values({ ...newUser, password: hashedPassword });
+    });
 
     return { success: true, error: null };
   } catch (error) {

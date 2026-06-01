@@ -1,5 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
-import { User } from "@/types/user";
+import { User } from "./db/schema";
 
 export const authConfig = {
   pages: {

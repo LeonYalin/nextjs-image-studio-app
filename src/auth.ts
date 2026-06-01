@@ -1,7 +1,11 @@
 import NextAuth from "next-auth";
-import { User } from "@/types/user";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
+import { User } from "./db/schema";
+import { db } from "./db";
+import * as schema from "./db/schema";
+import { eq } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -12,24 +16,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize(credentials) {
-        if (!credentials?.email || !credentials.password) return null;
+      async authorize(credentials) {
+        const email = String(credentials.email).toLowerCase();
+        const password = String(credentials.password);
 
-        // mock implementation
-        if (credentials.email === "test@test.com" && credentials.password === "test") {
-          const now = Date.now().toString();
-          const user: User = {
-            id: "1234",
-            name: "Test user",
-            email: "test@test.com",
-            role: "admin",
-            avatarUrl: "",
-            createdAt: now,
-            updatedAt: now,
-          };
-          return user;
+        if (!email || !password) return null;
+
+        const user = await db
+          .select()
+          .from(schema.users)
+          .where(eq(schema.users.email, email))
+          .limit(1)
+          .get(); // the get() here is because by default result is an array
+
+        if (!user || !user.passwordHash) {
+          return null;
         }
-        return null;
+
+        const passwordIsValid = bcrypt.compare(password, user.passwordHash);
+        if (!passwordIsValid) {
+          return null;
+        }
+
+        // strip password prop
+        const { passwordHash, ...safeUser } = user;
+        return safeUser;
       }
     })
   ],
