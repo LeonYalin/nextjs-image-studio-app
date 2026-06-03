@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { Toaster } from "@/components/ui/sonner";
+import ReactQueryProvider from "@/components/ReactQueryProvider";
 
 const geist = Geist({ subsets: [ 'latin' ], variable: '--font-sans' });
 
@@ -20,6 +21,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+
   return (
     <html
       lang="en"
@@ -27,10 +29,12 @@ export default async function RootLayout({
     >
       <body className="min-h-full">
         <SessionProvider session={session}>
-          <TooltipProvider>
-            {children}
-            <Toaster richColors closeButton position="top-right" />
-          </TooltipProvider>
+          <ReactQueryProvider>
+            <TooltipProvider>
+              {children}
+              <Toaster richColors closeButton position="top-right" />
+            </TooltipProvider>
+          </ReactQueryProvider>
         </SessionProvider>
       </body>
     </html>

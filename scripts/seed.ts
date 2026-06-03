@@ -27,8 +27,9 @@ import { db } from "@/db";
       };
       await tx.insert(schema.users).values(mockUser);
 
-      // seed photos
-      await tx.insert(schema.photos).values([
+      /**
+       // seed photos
+       await tx.insert(schema.photos).values([
         { id: "photo_1", userId: mockUser.id, storageUrl: "uploads/photo1.jpg" },
         { id: "photo_2", userId: mockUser.id, storageUrl: "uploads/photo2.jpg" },
       ]);
@@ -42,6 +43,7 @@ import { db } from "@/db";
       await tx.insert(schema.albumPhotos).values(
         { albumId: "album_1", photoId: "photo_1" },
       );
+      */
 
       console.log("✅ Seeding completed successfully.");
     });

@@ -1,5 +1,5 @@
-import AppGallery from "@/components/AppGallery";
+import PhotoGallery from "@/components/PhotoGallery";
 
 export default async function PhotosPage() {
-  return <AppGallery />;
+  return <PhotoGallery />;
 }

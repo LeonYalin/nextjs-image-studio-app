@@ -1,5 +1,5 @@
-import AppAlbums from "@/components/AppAlbums";
+import PhotoAlbums from "@/components/PhotoAlbums";
 
 export default function AlbumsPage() {
-  return <AppAlbums />;
+  return <PhotoAlbums />;
 }
