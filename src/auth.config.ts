@@ -9,9 +9,12 @@ export const authConfig = {
     strategy: "jwt",
   },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.user = user as User;
+      }
+      if (trigger === "update" && session?.user && token.user) {
+        token.user = { ...token.user, ...session.user };
       }
       return token;
     },

@@ -7,9 +7,12 @@ export function usePhotos() {
   const { data: photos, isLoading, error } = useQuery<Photo[]>({
     queryKey: [ "photos" ],
     queryFn: async () => {
-      return await fetch("/api/photos")
-        .then(res => res.json())
-        .catch(e => { throw new Error(e); });
+      const res = await fetch("/api/photos");
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || "Failed to load photos");
+      }
+      return res.json();
     }
   });
 
@@ -35,11 +38,28 @@ export function usePhotos() {
     },
   });
 
+  const deletePhotoMutation = useMutation<void, Error, string>({
+    mutationFn: async (photoId: string) => {
+      const res = await fetch(`/api/photos/${photoId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || "Delete failed");
+      }
+    },
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: [ "photos" ] });
+      // a deleted photo may have belonged to albums — refresh their covers/counts
+      queryClient.invalidateQueries({ queryKey: [ "albums" ] });
+    },
+  });
+
   return {
     photos,
     isLoading,
     error,
     uploadPhoto: uploadPhotoMutation.mutate,
     isUploading: uploadPhotoMutation.isPending,
+    deletePhoto: deletePhotoMutation.mutateAsync,
+    isDeleting: deletePhotoMutation.isPending,
   };
 }

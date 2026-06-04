@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn, signOut } from "@/auth";
+import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import { AuthError } from "next-auth";
 import * as schema from "../db/schema";
@@ -85,5 +85,37 @@ export async function registerAction(prevState: any, formData: FormData) {
   } catch (error) {
     console.error("Registration error", error);
     return { success: false, error: "Error registering user" };
+  }
+}
+
+export async function updateProfileAction(input: { name: string; avatarUrl?: string; }) {
+  const updateProfileSchema = z.object({
+    name: z.string().trim().min(2, "Name must be at least 2 characters long").max(80, "Name is too long"),
+    avatarUrl: z
+      .union([ z.url("Enter a valid image URL"), z.literal("") ])
+      .optional(),
+  });
+
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false as const, error: "Not authenticated" };
+  }
+
+  const parsed = updateProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false as const, error: parsed.error.issues[ 0 ]?.message ?? "Invalid data" };
+  }
+
+  try {
+    const avatarUrl = parsed.data.avatarUrl ?? "";
+    await db
+      .update(schema.users)
+      .set({ name: parsed.data.name, avatarUrl, updatedAt: new Date() })
+      .where(eq(schema.users.id, session.user.id));
+
+    return { success: true as const, error: null, name: parsed.data.name, avatarUrl };
+  } catch (error) {
+    console.error("Update profile error", error);
+    return { success: false as const, error: "Error updating profile" };
   }
 }

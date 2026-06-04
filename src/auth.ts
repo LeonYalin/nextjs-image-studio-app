@@ -54,9 +54,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // server side callback
     // happens after the "authorize"
     // save user data into token payload
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.user = user as User;
+      }
+      // when the client calls useSession().update(...), merge the new fields
+      // so name/avatar changes show up without re-logging in
+      if (trigger === "update" && session?.user && token.user) {
+        token.user = { ...token.user, ...session.user };
       }
       return token;
     },
