@@ -1,4 +1,3 @@
-// src/app/register/page.tsx
 "use client";
 
 import { useState, useTransition } from "react";
@@ -6,17 +5,17 @@ import { useRouter } from "next/navigation";
 import { useForm, FormProvider, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-
+import BrandMark from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { registerAction } from "@/lib/actions";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
-  email: z.string().email("Please enter a valid email address."),
+  email: z.string().min(1, "Email is required"),
   password: z.string().min(4, "Password must be at least 4 characters."),
   confirmPassword: z.string().min(1, "Please confirm your password."),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -31,7 +30,6 @@ export default function RegisterPage() {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // 1. Initialize methods object to pass down into FormProvider context
   const methods = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
@@ -39,15 +37,12 @@ export default function RegisterPage() {
 
   const onSubmit = (values: RegisterFormValues) => {
     setServerError(null);
-
     startTransition(async () => {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("email", values.email);
       formData.append("password", values.password);
-
       const result = await registerAction(null, formData);
-
       if (result.success) {
         router.push("/login");
       } else {
@@ -57,105 +52,131 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-slate-50 p-4">
-      <Card className="w-full max-w-md shadow-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
-          <CardDescription>Join our gallery app to safely store your photos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* 2. Wrap your layout inside the primitive FormProvider */}
-          <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
+    <div className="flex h-screen w-screen bg-background">
+      {/* Visual pane */}
+      <div className="relative flex-1 min-w-0 flex flex-col justify-between p-10 overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(145deg, rgba(12,13,15,.62), rgba(12,13,15,.30) 45%, rgba(12,13,15,.72))" }}
+        />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2.5">
+            <BrandMark size={30} hole="#15171c" />
+            <span className="font-display text-[22px] font-semibold tracking-[-0.02em] text-white leading-none">
+              Image<span className="font-normal">Gallery</span>
+            </span>
+          </div>
+        </div>
+        <div className="relative z-10 max-w-md">
+          <h2 className="font-display text-[34px] font-semibold leading-[1.1] tracking-[-0.025em] text-white m-0">
+            Every photo, beautifully in place.
+          </h2>
+          <p className="text-[15px] mt-3.5 leading-relaxed" style={{ color: "rgba(255,255,255,.78)" }}>
+            Upload, browse and organize your memories into albums — all in one calm, private gallery.
+          </p>
+        </div>
+      </div>
 
+      {/* Form pane */}
+      <div
+        className="flex items-center justify-center p-8 overflow-y-auto"
+        style={{ flex: "0 0 clamp(380px, 38%, 520px)" }}
+      >
+        <div className="w-full max-w-[360px]">
+          <h1 className="font-display text-[30px] font-semibold tracking-[-0.02em] m-0">
+            Create your account
+          </h1>
+          <p className="text-[14.5px] text-muted-foreground mt-2 mb-7">
+            Start your personal gallery in seconds.
+          </p>
+
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-4">
               {serverError && (
-                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive font-medium">
+                <div className="rounded-lg bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive">
                   {serverError}
                 </div>
               )}
 
-              {/* FIELD: FULL NAME */}
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="name" className="text-[13.5px] font-medium">Name</Label>
                 <Controller
                   name="name"
                   control={methods.control}
                   render={({ field, fieldState }) => (
-                    <div className="space-y-1">
-                      <Input id="name" placeholder="John Doe" disabled={isPending} {...field} />
-                      {fieldState.error && (
-                        <p className="text-xs font-medium text-destructive">{fieldState.error.message}</p>
-                      )}
-                    </div>
+                    <>
+                      <Input id="name" placeholder="Jane Doe" disabled={isPending} {...field} />
+                      {fieldState.error && <p className="text-xs font-medium text-destructive">{fieldState.error.message}</p>}
+                    </>
                   )}
                 />
               </div>
 
-              {/* FIELD: EMAIL */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="email" className="text-[13.5px] font-medium">Email</Label>
                 <Controller
                   name="email"
                   control={methods.control}
                   render={({ field, fieldState }) => (
-                    <div className="space-y-1">
+                    <>
                       <Input id="email" type="email" placeholder="name@example.com" disabled={isPending} {...field} />
-                      {fieldState.error && (
-                        <p className="text-xs font-medium text-destructive">{fieldState.error.message}</p>
-                      )}
-                    </div>
+                      {fieldState.error && <p className="text-xs font-medium text-destructive">{fieldState.error.message}</p>}
+                    </>
                   )}
                 />
               </div>
 
-              {/* FIELD: PASSWORD */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password" className="text-[13.5px] font-medium">Password</Label>
                 <Controller
                   name="password"
                   control={methods.control}
                   render={({ field, fieldState }) => (
-                    <div className="space-y-1">
+                    <>
                       <Input id="password" type="password" placeholder="••••••••" disabled={isPending} {...field} />
-                      {fieldState.error && (
-                        <p className="text-xs font-medium text-destructive">{fieldState.error.message}</p>
-                      )}
-                    </div>
+                      {fieldState.error && <p className="text-xs font-medium text-destructive">{fieldState.error.message}</p>}
+                    </>
                   )}
                 />
               </div>
 
-              {/* FIELD: CONFIRM PASSWORD */}
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="confirmPassword" className="text-[13.5px] font-medium">Confirm password</Label>
                 <Controller
                   name="confirmPassword"
                   control={methods.control}
                   render={({ field, fieldState }) => (
-                    <div className="space-y-1">
+                    <>
                       <Input id="confirmPassword" type="password" placeholder="••••••••" disabled={isPending} {...field} />
-                      {fieldState.error && (
-                        <p className="text-xs font-medium text-destructive">{fieldState.error.message}</p>
-                      )}
-                    </div>
+                      {fieldState.error && <p className="text-xs font-medium text-destructive">{fieldState.error.message}</p>}
+                    </>
                   )}
                 />
               </div>
 
-              <Button type="submit" className="w-full mt-2" disabled={isPending}>
-                {isPending ? "Creating Account..." : "Register"}
+              <Button variant="brand" size="lg" type="submit" className="w-full mt-1.5" disabled={isPending}>
+                {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isPending ? "Creating…" : "Sign up"}
               </Button>
 
-              <div className="text-center text-sm text-muted-foreground mt-4">
+              <div className="text-center text-sm text-muted-foreground mt-2">
                 Already have an account?{" "}
-                <Link href="/login" className="text-primary hover:underline font-medium">
-                  Sign In
+                <Link href="/login" className="font-semibold" style={{ color: "var(--brand)" }}>
+                  Sign in
                 </Link>
               </div>
             </form>
           </FormProvider>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

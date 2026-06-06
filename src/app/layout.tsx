@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Geist } from "next/font/google";
+import { Geist, Bricolage_Grotesque, Geist_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "next-auth/react";
@@ -8,7 +8,9 @@ import { auth } from "@/auth";
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/components/ReactQueryProvider";
 
-const geist = Geist({ subsets: [ 'latin' ], variable: '--font-sans' });
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-display" });
 
 export const metadata: Metadata = {
   title: "Nextjs Image Gallery",
@@ -25,7 +27,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", "font-sans", geist.variable)}
+      className={cn("h-full", "antialiased", "font-sans", geist.variable, geistMono.variable, display.variable)}
     >
       <body className="min-h-full">
         <SessionProvider session={session}>

@@ -89,7 +89,10 @@ export default function AlbumFormDialog({
             />
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <Button variant="ghost" type="button" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button variant="brand" type="submit" disabled={pending}>
               {pending ? "Saving…" : submitLabel}
             </Button>
           </DialogFooter>

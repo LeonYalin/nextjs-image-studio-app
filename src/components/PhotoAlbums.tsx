@@ -2,8 +2,7 @@
 
 import { useAlbums } from "@/hooks/use-albums";
 import type { AlbumSummary } from "@/app/api/albums/route";
-import { FolderOpen, FolderPlus, ImageOff, MoreVertical, Pencil, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { Images, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,9 +28,9 @@ import { Skeleton } from "./ui/skeleton";
 
 export default function PhotoAlbums() {
   const { albums, isLoading, createAlbum, isCreating, renameAlbum, isRenaming, deleteAlbum } = useAlbums();
-  const [ createOpen, setCreateOpen ] = useState(false);
-  const [ renameTarget, setRenameTarget ] = useState<AlbumSummary | null>(null);
-  const [ deleteTarget, setDeleteTarget ] = useState<AlbumSummary | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<AlbumSummary | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AlbumSummary | null>(null);
 
   const handleCreate = async (title: string) => {
     try {
@@ -66,31 +65,27 @@ export default function PhotoAlbums() {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Albums</h1>
-        <Button onClick={() => setCreateOpen(true)}>
-          <FolderPlus className="h-4 w-4" />
+    <div className="px-6 pt-3 pb-10">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-[13.5px] text-muted-foreground">
+          {isLoading ? "" : `${albums?.length ?? 0} ${albums?.length === 1 ? "album" : "albums"}`}
+        </span>
+        <Button variant="outline" onClick={() => setCreateOpen(true)}>
+          <Plus className="h-4 w-4" />
           New album
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid gap-[22px]" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(214px, 1fr))" }}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-square w-full rounded-lg" />
+            <Skeleton key={i} className="aspect-square w-full rounded-[18px]" />
           ))}
         </div>
       ) : !albums || albums.length === 0 ? (
-        <div className="flex h-[50vh] flex-col items-center justify-center gap-3">
-          <FolderOpen className="h-10 w-10 text-muted-foreground stroke-[1.5]" />
-          <div className="text-center">
-            <p className="text-sm font-medium">No albums yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">Create an album to start organizing your photos.</p>
-          </div>
-        </div>
+        <EmptyState onCreate={() => setCreateOpen(true)} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid gap-[22px]" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(214px, 1fr))" }}>
           {albums.map((album) => (
             <AlbumCard
               key={album.id}
@@ -125,17 +120,14 @@ export default function PhotoAlbums() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete &ldquo;{deleteTarget?.title}&rdquo;?</AlertDialogTitle>
+            <AlertDialogTitle className="font-display">Delete &ldquo;{deleteTarget?.title}&rdquo;?</AlertDialogTitle>
             <AlertDialogDescription>
               This deletes the album only. The photos inside it are not deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -145,57 +137,134 @@ export default function PhotoAlbums() {
   );
 }
 
-function AlbumCard({
-  album,
-  onRename,
-  onDelete,
-}: {
-  album: AlbumSummary;
-  onRename: () => void;
-  onDelete: () => void;
-}) {
-  const [ coverError, setCoverError ] = useState(false);
+function EmptyState({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="flex h-[48vh] flex-col items-center justify-center gap-4 text-center">
+      <div
+        style={{
+          width: 76,
+          height: 76,
+          borderRadius: "9999px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "conic-gradient(from 210deg, var(--brand), var(--accent-green), var(--accent-amber), var(--accent-red), var(--brand))",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+        }}
+      >
+        <div
+          style={{
+            width: 62,
+            height: 62,
+            borderRadius: "9999px",
+            background: "var(--background)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Images className="h-7 w-7 text-muted-foreground stroke-[1.75]" />
+        </div>
+      </div>
+      <div>
+        <p className="font-display text-[18px] font-semibold">No albums yet</p>
+        <p className="mt-1.5 text-[13.5px] text-muted-foreground max-w-xs">
+          Create an album to group photos by trip, person, or moment.
+        </p>
+      </div>
+      <Button variant="brand" onClick={onCreate}>
+        <Plus className="h-4 w-4" />
+        New album
+      </Button>
+    </div>
+  );
+}
+
+function AlbumCover({ album }: { album: AlbumSummary }) {
+  const photos = (album as AlbumSummary & { photos?: { storageUrl: string }[] }).photos;
+  const coverUrl = album.coverUrl;
+
+  if (!coverUrl && (!photos || photos.length === 0)) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
+        <Images className="h-8 w-8 stroke-[1.5]" />
+      </div>
+    );
+  }
+
+  if (coverUrl) {
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img src={coverUrl} alt={album.title} className="h-full w-full object-cover" />
+    );
+  }
 
   return (
-    <div className="group relative">
+    <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
+      <Images className="h-8 w-8 stroke-[1.5]" />
+    </div>
+  );
+}
+
+function AlbumCard({ album, onRename, onDelete }: { album: AlbumSummary; onRename: () => void; onDelete: () => void }) {
+  const [hover, setHover] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
       <Link href={`/albums/${album.id}`} className="block">
-        <div className="relative aspect-square overflow-hidden rounded-lg border bg-black shadow-sm">
-          {album.coverUrl && !coverError ? (
-            <Image
-              src={album.coverUrl}
-              alt={album.title}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-              className="object-cover transition-transform group-hover:scale-[1.03]"
-              onError={() => setCoverError(true)}
-              unoptimized
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
-              {album.coverUrl ? <ImageOff className="h-8 w-8 stroke-[1.5]" /> : <FolderOpen className="h-8 w-8 stroke-[1.5]" />}
-            </div>
-          )}
+        <div
+          className="relative overflow-hidden"
+          style={{
+            aspectRatio: "1/1",
+            borderRadius: 18,
+            background: "var(--muted)",
+            boxShadow: hover ? "0 8px 24px rgba(0,0,0,0.12)" : "0 1px 3px rgba(0,0,0,0.08)",
+            transform: hover ? "translateY(-2px)" : "none",
+            transition: "box-shadow 0.2s, transform 0.2s",
+          }}
+        >
+          <AlbumCover album={album} />
         </div>
-        <div className="mt-2">
-          <p className="truncate text-sm font-medium">{album.title}</p>
-          <p className="text-xs text-muted-foreground">
+        <div className="mt-2.5 pl-0.5">
+          <p className="truncate text-[14.5px] font-semibold">{album.title}</p>
+          <p className="text-[12.5px] text-muted-foreground mt-0.5">
             {album.photoCount} {album.photoCount === 1 ? "photo" : "photos"}
           </p>
         </div>
       </Link>
 
+      {/* Actions menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="absolute right-2 top-2 h-7 w-7 rounded-full opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100"
+          <button
             aria-label="Album actions"
+            style={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              width: 32,
+              height: 32,
+              borderRadius: "9999px",
+              border: "none",
+              cursor: "pointer",
+              background: "rgba(20,22,28,.55)",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: hover ? 1 : 0,
+              transition: "opacity 0.15s",
+              backdropFilter: "blur(4px)",
+            }}
           >
             <MoreVertical className="h-4 w-4" />
-          </Button>
+          </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem onClick={onRename} className="gap-2">
             <Pencil className="h-4 w-4 text-muted-foreground" />
             Rename

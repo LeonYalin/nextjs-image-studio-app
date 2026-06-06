@@ -153,7 +153,7 @@ export default function ProfileDialog({
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={isPending}>
+            <Button variant="brand" type="submit" disabled={isPending}>
               {isPending ? "Saving…" : "Save changes"}
             </Button>
           </DialogFooter>

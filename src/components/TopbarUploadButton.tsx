@@ -1,30 +1,30 @@
 "use client";
 
 import { usePhotos } from "@/hooks/use-photos";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "./ui/button";
+import { toast } from "sonner";
 
 export default function TopbarUploadButton() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadPhoto, isUploading } = usePhotos();
 
-  const handleTrigerClick = () => {
+  const handleTriggerClick = () => {
     fileInputRef.current?.click();
   };
 
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const targetFiles = e.target.files;
-    if (!targetFiles || !targetFiles.length) return;
-
-    uploadPhoto(targetFiles[ 0 ], {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadPhoto(file, {
       onSuccess: () => {
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      }
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        toast.success("Photo uploaded");
+      },
     });
   };
+
   return (
     <>
       <input
@@ -35,18 +35,13 @@ export default function TopbarUploadButton() {
         disabled={isUploading}
         onChange={handleFileSelection}
       />
-      <Button variant="secondary" size="default" onClick={handleTrigerClick}>
-        <span>
-          {
-            isUploading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : (
-              <div className="flex items-center gap-2">
-                Upload Photo <UploadCloud className="h-5 w-5" />
-              </div>
-            )
-          }
-        </span>
+      <Button variant="brand" onClick={handleTriggerClick} disabled={isUploading}>
+        {isUploading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Upload className="h-4 w-4" />
+        )}
+        {isUploading ? "Uploading…" : "Upload"}
       </Button>
     </>
   );

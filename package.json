@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "db:push": "npx drizzle-kit push",
     "db:seed": "npx drizzle-kit push && tsx scripts/seed.ts",
-    "dev": "npm run db:seed && next dev",
+    "dev": "npx drizzle-kit push && next dev",
     "build": "next build",
-    "start": "npm run db:seed && next start",
+    "start": "npx drizzle-kit push && next start",
     "lint": "eslint"
   },
   "dependencies": {

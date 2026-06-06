@@ -66,9 +66,10 @@ export function useAlbums() {
         "Failed to add photo to album"
       );
     },
-    onSuccess: (_data, { albumId }) => {
+    onSuccess: (_data, { albumId, photoId }) => {
       queryClient.invalidateQueries({ queryKey: [ "albums" ] });
       queryClient.invalidateQueries({ queryKey: [ "album", albumId ] });
+      queryClient.invalidateQueries({ queryKey: [ "photo-albums", photoId ] });
     },
   });
 
@@ -85,6 +86,15 @@ export function useAlbums() {
     addPhotoToAlbum: addPhotoToAlbum.mutateAsync,
     isAddingPhoto: addPhotoToAlbum.isPending,
   };
+}
+
+export function usePhotoAlbums(photoId: string | undefined) {
+  const { data, isLoading } = useQuery<{ albumIds: string[] }>({
+    queryKey: [ "photo-albums", photoId ],
+    queryFn: async () => jsonOrThrow(await fetch(`/api/photos/${photoId}/albums`), "Failed to load photo albums"),
+    enabled: Boolean(photoId),
+  });
+  return { albumIds: data?.albumIds ?? [], isLoading };
 }
 
 export function useAlbum(id: string) {
